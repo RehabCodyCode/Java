@@ -10,7 +10,7 @@ public class SecurityCameraMotionDetection {
     static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
 
     public static void main(String[] args) {
-        String rtspURL = "rtsp://username:password@camera_ip:port/stream"; // Replace with your RTSP URL
+        String rtspURL = "rtsp://username:password@camera_ip:port/stream";
 
         VideoCapture camera = new VideoCapture(rtspURL);
         if (!camera.isOpened()) {
