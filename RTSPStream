@@ -1,0 +1,42 @@
+import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.video.BackgroundSubtractorMOG2;
+import org.opencv.video.Video;
+import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.VideoWriter;
+
+public class SecurityCameraMotionDetection {
+
+    static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
+
+    public static void main(String[] args) {
+        String rtspURL = "rtsp://username:password@camera_ip:port/stream"; // Replace with your RTSP URL
+
+        VideoCapture camera = new VideoCapture(rtspURL);
+        if (!camera.isOpened()) {
+            System.out.println("Error: Cannot open camera stream.");
+            return;
+        }
+
+        Mat frame = new Mat();
+        Mat gray = new Mat();
+        Mat fgMask = new Mat();
+        BackgroundSubtractorMOG2 bgSubtractor = Video.createBackgroundSubtractorMOG2();
+        VideoWriter videoWriter = new VideoWriter("motion_detected.avi", VideoWriter.fourcc('M', 'J', 'P', 'G'), 10, new Size(640, 480));
+
+        while (camera.read(frame)) {
+            Imgproc.cvtColor(frame, gray, Imgproc.COLOR_BGR2GRAY);
+            bgSubtractor.apply(gray, fgMask);
+
+            // Count non-zero pixels in motion mask
+            int motionPixels = Core.countNonZero(fgMask);
+            if (motionPixels > 5000) { // Threshold for motion detection
+                System.out.println("Motion detected! Recording...");
+                videoWriter.write(frame);
+            }
+        }
+
+        camera.release();
+        videoWriter.release();
+    }
+}
