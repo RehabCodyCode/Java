@@ -1,0 +1,69 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class SecurityCameraSettings {
+
+    private static final String CAMERA_IP = "192.168.1.100";  // Replace with your camera's IP
+    private static final String USERNAME = "admin";  // Replace with your username
+    private static final String PASSWORD = "password";  // Replace with your password
+
+    public static void main(String[] args) {
+        try {
+            // Example: Modify brightness
+            modifyCameraSetting("brightness", "60");
+
+            // Example: Enable motion detection
+            modifyCameraSetting("motion_detection", "on");
+
+            // Example: Toggle night vision
+            modifyCameraSetting("night_vision", "auto");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void modifyCameraSetting(String setting, String value) throws Exception {
+        String apiUrl = "http://" + CAMERA_IP + "/api/settings";
+        
+        // JSON payload to modify the setting
+        String jsonPayload = "{ \"" + setting + "\": \"" + value + "\" }";
+
+        // Create HTTP connection
+        URL url = new URL(apiUrl);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setRequestProperty("Authorization", "Basic " + encodeBase64(USERNAME + ":" + PASSWORD));
+        conn.setDoOutput(true);
+
+        // Send JSON data
+        try (OutputStream os = conn.getOutputStream()) {
+            byte[] input = jsonPayload.getBytes("utf-8");
+            os.write(input, 0, input.length);
+        }
+
+        // Read response
+        int responseCode = conn.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
+            StringBuilder response = new StringBuilder();
+            String responseLine;
+            while ((responseLine = br.readLine()) != null) {
+                response.append(responseLine.trim());
+            }
+            System.out.println("Response: " + response);
+        } else {
+            System.out.println("Failed to modify setting: " + responseCode);
+        }
+
+        conn.disconnect();
+    }
+
+    private static String encodeBase64(String input) {
+        return java.util.Base64.getEncoder().encodeToString(input.getBytes());
+    }
+}
