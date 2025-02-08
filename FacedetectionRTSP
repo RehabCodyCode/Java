@@ -1,0 +1,38 @@
+import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
+import org.opencv.videoio.VideoCapture;
+
+public class SecurityCameraFaceDetection {
+
+    static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
+
+    public static void main(String[] args) {
+        String rtspURL = "rtsp://username:password@camera_ip:port/stream"; 
+
+        VideoCapture camera = new VideoCapture(rtspURL);
+        if (!camera.isOpened()) {
+            System.out.println("Error: Cannot open camera.");
+            return;
+        }
+
+        CascadeClassifier faceDetector = new CascadeClassifier("haarcascade_frontalface_alt.xml");
+        Mat frame = new Mat();
+
+        while (camera.read(frame)) {
+            Mat gray = new Mat();
+            Imgproc.cvtColor(frame, gray, Imgproc.COLOR_BGR2GRAY);
+
+            MatOfRect faces = new MatOfRect();
+            faceDetector.detectMultiScale(gray, faces);
+
+            for (Rect face : faces.toArray()) {
+                Imgproc.rectangle(frame, face, new Scalar(0, 255, 0), 2);
+            }
+
+            System.out.println("Detected faces: " + faces.toArray().length);
+        }
+
+        camera.release();
+    }
+}
